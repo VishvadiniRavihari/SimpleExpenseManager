@@ -67,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
 
         /***  Begin generating dummy data for In-Memory implementation  ***/
         // expenseManager = new InMemoryDemoExpenseManager();
+
+        //implementation is changed to persistent manner
         expenseManager = new PersistentMemoryDemoExpenseManager(this);
         /*** END ***/
     }

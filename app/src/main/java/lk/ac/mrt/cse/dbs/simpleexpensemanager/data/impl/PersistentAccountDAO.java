@@ -12,11 +12,8 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 
 public class PersistentAccountDAO implements AccountDAO {
-
     private final mydatabase mydb;
-
-    private static final String TABLE = "account";
-
+    private static final String ACCOUNT_TABLE = "account";
     private static final String ACCOUNT_NO = "accountNo";
     private static final String ACCOUNT_BANKNAME = "bankName";
     private static final String ACCOUNT_HOLDERNAME = "accountHolderName";
@@ -27,82 +24,93 @@ public class PersistentAccountDAO implements AccountDAO {
     }
 
     @Override
+    // To get a list of account numbers
     public List<String> getAccountNumbersList() {
-
-        Cursor resultSet = this.mydb.getData(TABLE,new String[]{ACCOUNT_NO},null,new String[]{},
-                null,null,null);
+        Cursor result = this.mydb.getData(ACCOUNT_TABLE,new String[]{ACCOUNT_NO},null,new String[]{}, null,null,null);
         List <String> accountNumbersList = new ArrayList<String>();
-        if(resultSet.getCount() != 0) {
-            while (resultSet.moveToNext()) {
-                accountNumbersList.add(resultSet.getString(0));
+
+        if(result.getCount() != 0) {
+            while (result.moveToNext()) {
+                accountNumbersList.add(result.getString(0));
             }
         }
-        resultSet.close();
+        result.close();
+
         return accountNumbersList;
     }
     @Override
+    //To get a list of accounts
     public List<Account> getAccountsList() {
+
         String[] columns ={"accountNo","bankName","accountHolderName","balance"};
-        Cursor resultSet = this.mydb.getData(TABLE,columns,null,null,null,null,null);
+        Cursor result = this.mydb.getData(ACCOUNT_TABLE,columns,null,null,null,null,null);
         List<Account> accountsList = new ArrayList<Account>();
-        if(resultSet.getCount() != 0) {
-            while (resultSet.moveToNext()) {
-                String accountNo = resultSet.getString(resultSet.getColumnIndex(ACCOUNT_NO));
-                String bankName = resultSet.getString(resultSet.getColumnIndex(ACCOUNT_BANKNAME));
-                String accountHolderName = resultSet.getString(resultSet.getColumnIndex(ACCOUNT_HOLDERNAME));
-                double balance = resultSet.getDouble(resultSet.getColumnIndex(ACCOUNT_BALANCE));
+
+        if(result.getCount() != 0) {
+            while (result.moveToNext()) {
+                String accountNo = result.getString(result.getColumnIndex(ACCOUNT_NO));
+                String bankName = result.getString(result.getColumnIndex(ACCOUNT_BANKNAME));
+                String accountHolderName = result.getString(result.getColumnIndex(ACCOUNT_HOLDERNAME));
+                double balance = result.getDouble(result.getColumnIndex(ACCOUNT_BALANCE));
                 Account account = new Account(accountNo, bankName, accountHolderName, balance);
                 accountsList.add(account);
             }
         }
-        resultSet.close();
+        result.close();
+
         return accountsList;
     }
 
     @Override
+    //To get an account
     public Account getAccount(String accountNo) throws InvalidAccountException {
         String selection = "accountNo = ?";
-        Cursor resultSet = this.mydb.getData(TABLE,null,selection,new String[]{accountNo},null,null,null);
-        if(resultSet.getCount() == 0){
+        Cursor result = this.mydb.getData(ACCOUNT_TABLE,null,selection,new String[]{accountNo},null,null,null);
+        if(result.getCount() == 0){
             throw new InvalidAccountException("Invalid Account Number");
         }
         String accountNO = "";
         String bankName = "";
         String accountHolderName = "";
         double balance = 0;
-        while(resultSet.moveToNext()){
-            accountNO = resultSet.getString(resultSet.getColumnIndex(ACCOUNT_NO));
-            bankName = resultSet.getString(resultSet.getColumnIndex(ACCOUNT_BANKNAME));
-            accountHolderName = resultSet.getString(resultSet.getColumnIndex(ACCOUNT_HOLDERNAME));
-            balance = resultSet.getDouble(resultSet.getColumnIndex(ACCOUNT_BALANCE));
+
+        while(result.moveToNext()){
+            accountNO = result.getString(result.getColumnIndex(ACCOUNT_NO));
+            bankName = result.getString(result.getColumnIndex(ACCOUNT_BANKNAME));
+            accountHolderName = result.getString(result.getColumnIndex(ACCOUNT_HOLDERNAME));
+            balance = result.getDouble(result.getColumnIndex(ACCOUNT_BALANCE));
         }
+        result.close();
 
-        resultSet.close();
-        return new Account(accountNO,bankName,accountHolderName,balance);
+        Account account = new Account(accountNO,bankName,accountHolderName,balance);
+        return account;
     }
 
     @Override
+    //To add an account
     public void addAccount(Account account) {
-        ContentValues accountContent = new ContentValues();
-        accountContent.put(ACCOUNT_NO, account.getAccountNo());
-        accountContent.put(ACCOUNT_BANKNAME, account.getBankName());
-        accountContent.put(ACCOUNT_HOLDERNAME, account.getAccountHolderName());
-        accountContent.put(ACCOUNT_BALANCE, account.getBalance());
-        this.mydb.onInsertData(TABLE,accountContent);
+        ContentValues accContent = new ContentValues();
+        accContent.put(ACCOUNT_NO, account.getAccountNo());
+        accContent.put(ACCOUNT_BANKNAME, account.getBankName());
+        accContent.put(ACCOUNT_HOLDERNAME, account.getAccountHolderName());
+        accContent.put(ACCOUNT_BALANCE, account.getBalance());
+        this.mydb.onInsertData(ACCOUNT_TABLE,accContent);
 
 
     }
 
     @Override
+    //To remove an account
     public void removeAccount(String accountNo) throws InvalidAccountException {
         int result = this.mydb.deleteRow("account","accountNo = ?",new String[]{accountNo});
         if(result == 0){
-            throw new InvalidAccountException("Account number is invalid");
+            throw new InvalidAccountException("Invalid Account Number");
         }
 
     }
 
     @Override
+    //To update the balance
     public void updateBalance(String accountNo, ExpenseType expenseType, double amount) throws InvalidAccountException {
         double balance=0;
         double total = 0;
@@ -123,11 +131,9 @@ public class PersistentAccountDAO implements AccountDAO {
         }
         ContentValues accContent = new ContentValues();
         accContent.put(ACCOUNT_BALANCE, total);
-        boolean result = this.mydb.updateTable(TABLE,accContent,"accountNo = ? ",new String[]{accountNo});
+        boolean result = this.mydb.updateTable(ACCOUNT_TABLE,accContent,"accountNo = ? ",new String[]{accountNo});
         if(!result){
-            throw new InvalidAccountException("Account number is invalid");
+            throw new InvalidAccountException("Invalid Account Number");
         }
     }
-
-
 }

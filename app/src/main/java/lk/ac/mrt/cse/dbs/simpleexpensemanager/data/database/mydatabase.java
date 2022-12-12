@@ -11,102 +11,89 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 
 
 public class mydatabase extends SQLiteOpenHelper {
-
     private static final String DATABASE = "200332X.db";
-
-    public static final int DATABASE_VERSION = 1;
-
     private static final String ACCOUNT_TABLE = "account";
-
     private static final String TRANSACTION_TABLE = "account_transaction";
 
-
     public mydatabase(@Nullable Context context) {
-        super(context, DATABASE, null, DATABASE_VERSION);
+        super(context, DATABASE, null, 1);
     }
 
 
     @Override
-    // CREATE TABLES
+    // To create tables
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        String query1 = "CREATE TABLE " + ACCOUNT_TABLE + "( accountNo TEXT PRIMARY KEY ," +
+        String acc_table_creation = "CREATE TABLE " + ACCOUNT_TABLE + "( accountNo TEXT PRIMARY KEY ," +
                 "bankName TEXT  ," +
                 "accountHolderName TEXT, " +
                 "balance REAL"
                 + ")";
-        String query2 = "CREATE TABLE " + TRANSACTION_TABLE +
+        sqLiteDatabase.execSQL(acc_table_creation);
+        String tran_table_creation = "CREATE TABLE " + TRANSACTION_TABLE +
                 " (transaction_no INTEGER  PRIMARY KEY AUTOINCREMENT," +
                 "accountNo TEXT," +
                 "date TEXT, " +
                 "expenseType TEXT ," +
                 "amount REAL"
                 + ")";
-
-        sqLiteDatabase.execSQL(query1);
-        sqLiteDatabase.execSQL(query2);
-
+        sqLiteDatabase.execSQL(tran_table_creation);
     }
 
     @Override
+    // if tables are already exists, delete them first and create again
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        //deletes existing database and create the database again
-        String query1 = "DROP TABLE IF EXISTS " + ACCOUNT_TABLE;
-        String query2 = "DROP TABLE IF EXISTS " + TRANSACTION_TABLE;
-        sqLiteDatabase.execSQL(query1);
-        sqLiteDatabase.execSQL(query2);
+        //delete the existing tables in database
+        String drop_create_acc_table = "DROP TABLE IF EXISTS " + ACCOUNT_TABLE;
+        sqLiteDatabase.execSQL(drop_create_acc_table);
+        String drop_create_tran_table = "DROP TABLE IF EXISTS " + TRANSACTION_TABLE;
+        sqLiteDatabase.execSQL(drop_create_tran_table);
+
+        // create the database again
         onCreate(sqLiteDatabase);
-
-
     }
 
-    //INSERT INTO TABLES
-    public boolean onInsertData(String table, ContentValues contentValues) {
+    //To insert data
+    public boolean onInsertData(String table_name, ContentValues contentvalues) {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
-        long result;
+        long feedback;
         try {
-            result = sqLiteDatabase.insertOrThrow(table, null, contentValues);
+            feedback = sqLiteDatabase.insertOrThrow(table_name, null, contentvalues);
         } catch (Exception e) {
-            result = -1;
-            System.out.print("Data insertion error");
+            feedback = -1;
+            System.out.print("Error occurred in insertion");
         }
-        return result != -1;
+        return feedback != -1;
     }
 
-    //GET DATA  - SELECT
-    public Cursor getDataWithLimit(String table, String[] columns, String selection, String[] selectionArgs, String groupBy,
+    //To query data
+    public Cursor getDataWithLimit(String table_name, String[] columns, String selection, String[] selectionArgs, String groupBy,
                                    String having, String orderBy, String limit) {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
 
-        return sqLiteDatabase.query(table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+        return sqLiteDatabase.query(table_name, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
     }
 
-    public Cursor getData(String table, String[] columns, String selection, String[] selectionArgs, String groupBy,
+    public Cursor getData(String table_name, String[] columns, String selection, String[] selectionArgs, String groupBy,
                           String having, String orderBy) {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
 
-        return sqLiteDatabase.query(table, columns, selection, selectionArgs, groupBy, having, orderBy);
+        return sqLiteDatabase.query(table_name, columns, selection, selectionArgs, groupBy, having, orderBy);
     }
 
-    public boolean updateTable(String table, ContentValues contentValues, String whereClause, String[] whereArgs) {
+    public boolean updateTable(String table_name, ContentValues contentvalues, String whereClause, String[] whereArgs) {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
-        long result;
+        long feedback;
         try {
-            result = sqLiteDatabase.update(table, contentValues, whereClause, whereArgs);
+            feedback = sqLiteDatabase.update(table_name, contentvalues, whereClause, whereArgs);
         } catch (Exception e) {
-            result = -1;
+            feedback = -1;
         }
-        return result != -1;
+        return feedback != -1;
     }
 
     //DELETE ROW
     public int deleteRow(String table, String whereClause, String[] whereArgs) {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         return sqLiteDatabase.delete(table, whereClause, whereArgs);
-    }
-
-    //DELETE TABLE CONTENT
-    public void deleteTableContent(String table_name) {
-        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
-        sqLiteDatabase.execSQL("DELETE FROM " + table_name);
     }
 }

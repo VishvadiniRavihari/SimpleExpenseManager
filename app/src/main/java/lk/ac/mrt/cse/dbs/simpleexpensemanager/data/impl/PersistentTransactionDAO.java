@@ -19,7 +19,7 @@ public class PersistentTransactionDAO implements TransactionDAO {
 
     private mydatabase mydb;
 
-    private static final String TABLE = "account_transaction";
+    private static final String TRANSACTION_TABLE = "account_transaction";
     private static final String TRANSACTION_DATE = "date";
     private static final String TRANSACTION_ACCOUNT_NO = "accountNo";
     private static final String TRANSACTION_EXPENSE_TYPE = "expenseType";
@@ -30,6 +30,7 @@ public class PersistentTransactionDAO implements TransactionDAO {
     }
 
     @Override
+    //To log each transaction
     public void logTransaction(Date date, String accountNo, ExpenseType expenseType, double amount) {
         if (expenseType == ExpenseType.EXPENSE) {
             PersistentAccountDAO dao = new PersistentAccountDAO(this.mydb);
@@ -48,57 +49,59 @@ public class PersistentTransactionDAO implements TransactionDAO {
         transactionContent.put(TRANSACTION_DATE, transDate);
         transactionContent.put(TRANSACTION_EXPENSE_TYPE, toStringExpense(expenseType));
         transactionContent.put(TRANSACTION_AMOUNT, amount);
-        this.mydb.onInsertData(TABLE, transactionContent);
+        this.mydb.onInsertData(TRANSACTION_TABLE, transactionContent);
     }
 
     @Override
+    //To return all transaction logs
     public List<Transaction> getAllTransactionLogs() {
-        Cursor resultSet = this.mydb.getData(TABLE, null, null, null, null, null, null);
+        Cursor result = this.mydb.getData(TRANSACTION_TABLE, null, null, null, null, null, null);
         List<Transaction> transactions = new ArrayList<Transaction>();
-        if (resultSet.getCount() != 0) {
+        if (result.getCount() != 0) {
 
-            while (resultSet.moveToNext()) {
-                String transDate = resultSet.getString(resultSet.getColumnIndex(TRANSACTION_DATE));
-                String accountNo = resultSet.getString(resultSet.getColumnIndex(TRANSACTION_ACCOUNT_NO));
-                String expenseType = resultSet.getString(resultSet.getColumnIndex(TRANSACTION_EXPENSE_TYPE));
-                double amount = resultSet.getDouble(resultSet.getColumnIndex(TRANSACTION_AMOUNT));
+            while (result.moveToNext()) {
+                String transDate = result.getString(result.getColumnIndex(TRANSACTION_DATE));
+                String accountNo = result.getString(result.getColumnIndex(TRANSACTION_ACCOUNT_NO));
+                String expenseType = result.getString(result.getColumnIndex(TRANSACTION_EXPENSE_TYPE));
+                double amount = result.getDouble(result.getColumnIndex(TRANSACTION_AMOUNT));
                 Date date = stringToDate(transDate);
 
                 Transaction transaction = new Transaction(date, accountNo, getExpense(expenseType), amount);
                 transactions.add(transaction);
             }
         }
-        resultSet.close();
+        result.close();
         return transactions;
     }
 
 
     @Override
+    //To get paginated logs
     public List<Transaction> getPaginatedTransactionLogs(int limit) {
-        Cursor resultSet = this.mydb.getDataWithLimit(TABLE, null, null, null, null, null, null, Integer.toString(limit));
+        Cursor result = this.mydb.getDataWithLimit(TRANSACTION_TABLE, null, null, null, null, null, null, Integer.toString(limit));
         List<Transaction> transactions = new ArrayList<Transaction>();
-        if (resultSet.getCount() != 0) {
+        if (result.getCount() != 0) {
 
-            while (resultSet.moveToNext()) {
-                String dateS = resultSet.getString(resultSet.getColumnIndex(TRANSACTION_DATE));
-                String accountNo = resultSet.getString(resultSet.getColumnIndex(TRANSACTION_ACCOUNT_NO));
-                String expenseType = resultSet.getString(resultSet.getColumnIndex(TRANSACTION_EXPENSE_TYPE));
-                double amount = resultSet.getDouble(resultSet.getColumnIndex(TRANSACTION_AMOUNT));
+            while (result.moveToNext()) {
+                String dateS = result.getString(result.getColumnIndex(TRANSACTION_DATE));
+                String accountNo = result.getString(result.getColumnIndex(TRANSACTION_ACCOUNT_NO));
+                String expenseType = result.getString(result.getColumnIndex(TRANSACTION_EXPENSE_TYPE));
+                double amount = result.getDouble(result.getColumnIndex(TRANSACTION_AMOUNT));
                 Date date = stringToDate(dateS);
                 Transaction transaction = new Transaction(date, accountNo, getExpense(expenseType), amount);
                 transactions.add(transaction);
             }
         }
-        resultSet.close();
+        result.close();
         return transactions;
     }
 
-
-    private Date stringToDate(String stringDate) {
+    /*Three methods are added below for the conversion purposes*/
+    private Date stringToDate(String string_date) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
         Date date = new Date();
         try {
-            date = dateFormat.parse(stringDate);
+            date = dateFormat.parse(string_date);
         } catch (Exception e) {
             System.out.println(e);
         }
